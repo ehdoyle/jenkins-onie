@@ -1,4 +1,4 @@
-// Seed job
+// Seed job seedONIEMachineBuilds.groovy
 // Does: Instantiates the Jenkins job that will generate all the the Onie
 //       machine builds.
 //       The buildComponents.groovy script that this runs does the parsing

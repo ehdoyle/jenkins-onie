@@ -1,5 +1,5 @@
 // Basic Imports
-// Stolen from https://stash.cumulusnetworks.com/projects/CIAUTO/repos/jenkins-cltest-seed/browse/system_groovy/configureBuildNodes.groovy
+// init_jenkins/jobs/configureBuildNodes.groovy
 
 import hudson.model.*
 import jenkins.model.*
@@ -15,12 +15,12 @@ def seed_job_workspace = binding.variables.SEED_WORKSPACE
 println "--> jenkins_package_seed  Running configureBuildNodes.groovy"
 
 // Setting up our slaves in Jenkins
-def slave_config_file = new File("${seed_job_workspace}/properties/jenkins_build_slaves.properties")
-def slave_properties = new ConfigSlurper().parse(slave_config_file.toURI().toURL()).jenkins_slaves
+def node_config_file = new File("${seed_job_workspace}/properties/jenkins_build_node.properties")
+def node_properties = new ConfigSlurper().parse(node_config_file.toURI().toURL()).jenkins_nodes
 
-println "--> jenkins_package_seed iterating through slave node instances."
+println "--> jenkins_package_seed iterating through build node instances."
 
-slave_properties.each { slave_shortname, slave_config ->
+node_properties.each { slave_shortname, slave_config ->
     // Create the SSH Launcher for Jenkins to use
     temp_launcher = new SSHLauncher(slave_config.slave_fqdn,            // FQDN for the slave is needed
                                     22,                                 // Port 22 for SSH, no need to parameterize this
@@ -34,7 +34,7 @@ slave_properties.each { slave_shortname, slave_config ->
                                     null,                               // Retry wait time
                                     new NonVerifyingKeyVerificationStrategy())
     
-    // Create a slave with all requested params
+    // Create a node with all requested params
     DumbSlave temp_dumb_slave = new DumbSlave(slave_shortname,
                                               slave_config.remote_fs,
                                               temp_launcher)
