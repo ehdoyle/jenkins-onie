@@ -35,7 +35,7 @@ def releaseTrack = "${binding.variables.JENKINS_RELEASE_TRACK}"
 println "--> In component_seed.groovy creating Onie machine seed job."
 
 
-pipelineJob("${seed_jobs_folder}/seed_machine_builds")
+pipelineJob("${seed_jobs_folder}/onie_builds")
 {
 	println "--> Running seed job from to create ${releaseTrack} jobs/seedONIEMachineBuilds.groovy"
 
