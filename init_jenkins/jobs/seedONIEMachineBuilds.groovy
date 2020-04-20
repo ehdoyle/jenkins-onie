@@ -76,7 +76,7 @@ String myDir = new File(".").getAbsoluteFile().getParent()
 	// buildComponents.Groovy
     step([
         $class: 'ExecuteDslScripts',
-        targets: "jobs/buildMachineTargets.groovy",
+        targets: "${home_dir}/workspace/SeedJobs/Seed_ONIE/onie_builds/jobs/buildMachineTargets.groovy",
         ignoreMissingFiles: true,
         ignoreExisting: false,
         removedJobAction: RemovedJobAction.DELETE,
