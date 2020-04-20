@@ -38,6 +38,10 @@ node("master") {
 	println "TRY ${jenkins_properties}"
 	println "branch ${jenkins_properties.seedjobs.components.branch}"
 */
+ def home_dir = System.getenv("JENKINS_HOME")
+ println "---> HERE"                         
+ println "---> Using home dir ${home_dir}"   
+ println "---> HERE"                         
 	
 	println "--> seedONIEMachineBuilds.groovy creating machine build jobs"
 

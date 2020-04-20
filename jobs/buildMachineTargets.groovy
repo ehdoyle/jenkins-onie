@@ -9,10 +9,9 @@ def aJob = job('test job') {
 	label 'test job label'
 	steps {
 		shell( "pwd ; ls -l ")
-		println( "done!"
+		println( "done!" )
+
+	}//steps
 
 
-		}//steps
-
-
-	}//test job
+}//test job
