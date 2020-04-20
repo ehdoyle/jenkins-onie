@@ -6,20 +6,21 @@ println "actual parsing code goes here."
 
 def onieURL="https://github.com/opencomputeproject/onie.git"
 def onieBranch="master"
-
+def stageName="checkout ONIE"
 println "---> ${curFileName} Checking out branch ${onieBranch} from ${onieURL}"
 
 def aJob = job('test job') {
 	label 'test job label'
-	stage( 'Running Test Job' ) {
-	
+	//stage( stageName ) {
 	steps {
-		shell( "pwd ; ls -l ")
-		println( "done!" )
+			shell( "pwd ; ls -l ")
+
+			shell("git clone --branch ${onieBranch} ${ONIE_URL} ")
+			shell( "ls -l onie/machine" )
+			println( "done!" )
 
 	}//steps
-	}//stage
-
+//}
 }//test job
 
 println "---> ${curFileName} Done."
