@@ -18,7 +18,7 @@ def seed_job_workspace = binding.variables.WORKSPACE
 println "--> jenkins-machine-seed/init_jenkins/component_seed.groovy:  Seed workspace is ${seed_job_workspace}"
 
 // Create subfolder to hold seed jobs for machine builds
-def seed_jobs_folder = "Seed_Machines"
+def seed_jobs_folder = "Seed_ONIE"
 // Create the subfolder
 folder(seed_jobs_folder)
 
