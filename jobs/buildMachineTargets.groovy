@@ -1,5 +1,8 @@
 // File is jenkins-onie/jobs/buildMachineTargets.groovy
 // This is jobdsl context
+//import org.codehaus.groovy.runtime.DefaultGroovyMethodsSupport
+
+//import java.io
 
 def curFileName="buildMachineTargets.groovy"
 
@@ -16,12 +19,20 @@ class BuildTarget {
       def buildEnv
       def makeTarget
 
+      //ProcessGroovyMethods  runCommands 
+      Process  processOut
+
+      // list of strings
+      List<String> checkoutCmds = new ArrayList<>()
+      
+      def environmentVars = [] // empty vars
       String myMsg="---> REBELLL HEY!"
       String myCWD=""
       String myCmd="find onie/machine -maxdepth 1 " 
       String dirPaths
       String machineList
-      
+
+
       String myCmdResult
       def yell() {
           //  prints to syslog
@@ -38,13 +49,59 @@ class BuildTarget {
 
       }
 
+      // scope these outside runCommand to hold return output
+      def cmdOut
+      def cmdErr
+
+      //
+      // Do not stack multiple commands.
+      // Things like ; and && cause cryptic java errors
+      // Also, println statements go into the local jenkins.log
+      String runCommand( String theCmd ) {
+	  println "---> Executing:  ${theCmd}"
+          cmdOut = new StringBuffer()
+          cmdErr = new StringBuffer()
+	  Process cmdProc = theCmd.execute()
+	  cmdProc.waitForProcessOutput( cmdOut, cmdErr )
+ 	  cmdProc.waitFor()
+//	  println "Got out ${cmdOut}"
+//	  println "Got err ${cmdErr}"
+//	  if( cmdOut.size() > 0 ) println "Big enough to print" + cmdOut
+//	  if( cmdErr.size() > 0 ) println "Big enough to print " + cmdErr      	     
+
+      }
+      
       def getMachines() {
+
+
+      // add commands to list
+      def onieCheckoutDir = "/var/jenkins_home/workspace/SeedJobs/Seed_ONIE/oniecheckout" 
+//      checkoutCmds.add( "git clone https://github.com/opencomputeproject/onie.git ${onieCheckoutDir}" )
+//      checkoutCmds.add ( "find ${onieCheckoutDir}/machine -maxdepth 1" )
+
+	// don't particularly care if this works or not
+	//	runCommand "rm -rf ${onieCheckoutDir}"
+	println "Commented out delete of ONIE to save debug time."
+	runCommand "git clone https://github.com/opencomputeproject/onie.git ${onieCheckoutDir}"
+	  println "Got out ${cmdOut}"
+	  println "Got err ${cmdErr}"
+	  runCommand "find  ${onieCheckoutDir}/machine -maxdepth 1" 
+	  println "Got out ${cmdOut}"
+	  println "Got err ${cmdErr}"
+
+      //http://docs.groovy-lang.org/docs/groovy-2.4.0/html/api/org/codehaus/groovy/runtime/ProcessGroovyMethods.html
+
+	def testCmd = "git clone https://github.com/opencomputeproject/onie.git"
+	def checkoutPath = "/var/jenkins_home/workspace/SeedJobs/Seed_ONIE/"
+
+	//http://docs.groovy-lang.org/next/html/documentation/working-with-collections.html
+//      checkoutCmds.each {
+//      			// 'it' represents the current element
+//          println "ITERATE:  Use command $it"
+//	  def leCommand = "$it"
+//      }
+
       println "---> Doing clone"
-      "git clone https://github.com/opencomputeproject/onie.git".execute().text
-//      myCmdResult = "git clone -b master https://github.com/opencomputeproject/onie.git ".execute().text
-	println "---> Running find."
-  //    machineList = "find /var/jenkins_home/onie/machine -maxdepth 1".execute().text
-      machineList = "find /onie/machine -maxdepth 1".execute().text
 
 
       }//getMachines
