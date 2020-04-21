@@ -16,7 +16,52 @@ class BuildTarget {
       def buildEnv
       def makeTarget
 
-}// BuildTarget 
+      String myMsg="---> REBELLL HEY!"
+      String myCWD=""
+      String myCmd="find onie/machine -maxdepth 1 " 
+      String dirPaths
+      String machineList
+      
+      String myCmdResult
+      def yell() {
+          //  prints to syslog
+	  //	println myMsg
+	  //  System.out.println(myMsg)
+	  dirPaths = System.getenv("JENKINS_HOME")
+      }//yell
+      
+      def listFiles() {
+      // Groovy can execute strings as shell commands
+       myCWD = "pwd".execute().text
+       myCmdResult= myCmd.execute().text
+       println myCmdResult
+
+      }
+
+      def getMachines() {
+      println "---> Doing clone"
+      "git clone https://github.com/opencomputeproject/onie.git".execute().text
+//      myCmdResult = "git clone -b master https://github.com/opencomputeproject/onie.git ".execute().text
+	println "---> Running find."
+  //    machineList = "find /var/jenkins_home/onie/machine -maxdepth 1".execute().text
+      machineList = "find /onie/machine -maxdepth 1".execute().text
+
+
+      }//getMachines
+}// BuildTarget
+
+def foo = new BuildTarget()
+
+
+
+
+//shell( "pwd ; ls -l ")
+//shell("find onie/machine -maxdepth 1 > outfile.txt" )
+//def fileContents =readFileFromWorkspace('outfile.txt' )
+//println "File contents ${filecontents}"
+
+def outputFile = "outfile.txt"
+
 def aJob = job('ONIE build') {
     // any system labeled 'onie' can build.
 	label 'onie'
@@ -27,18 +72,29 @@ def aJob = job('ONIE build') {
 
 
 	}//parameters
-	steps {	
-		shell("git clone --branch ${onieBranch} ${onieURL} ")
+//			def filecontents = readfile( outputFile )	
+	
+	steps {
+		shell( "if [ !  -d onie ]; then git clone --branch ${onieBranch} ${onieURL} ; fi" )
+
 		}
 
 	steps {
-			shell( "pwd ; ls -l ")
-			shell( "ls -l onie/machine" )
-			//shell( readFileFromWorkspace("find onie/machine -maxdepth 1" ))
+	 println "Java pwd is ${foo.myCWD}"
+	 foo.getMachines()
+	 println "Machine result ${foo.myCmdResult}"	 
+	 println "Machine list ${foo.machineList}"
+	 
+//			shell( "ls -l onie/machine > outfile.txt" )
+//			def filecontents = readfile( outputFile )	
+//			shell( "pwd ; ls -l ")
 
+//			shell("find onie/machine -maxdepth 1 > outfile.txt" )
 
-
-			shell("find onie/machine -maxdepth 1" )
+//			println "File contents ${filecontents}"
+//			def fileContents =readFileFromWorkspace('outfile.txt' )
+//			echo "${fileContents}"
+//			output = ${ shell("find onie/machine -maxdepth 1" ) }
 			
 			//def manulist =  sh( returnStdout: true, script: 'find onie/machine -maxdepth ').trim
 			//println "Manufacturer list: ${manulist}"
