@@ -226,7 +226,8 @@ targetList.BuildTargetArray.each {
 	def buildTargetInfo = it
 
 	println "Naming job ${buildTargetInfo.machine}"
-	def aJob = job( buildTargetInfo.machine) {
+	// use leading / to put this job in the top level Manufacturer folder
+	def aJob = job( "/${buildTargetInfo.machine}" ) {
 		// any system labeled 'onie' can build.
 		//	label "${buildTargetInfo.manufacturer} ${buildTargetInfo.machine}"
 		label "${buildTargetInfo.manufacturer} ${buildTargetInfo.machine}"
