@@ -36,7 +36,7 @@ class BuildTargetList {
 
     // Create a list of Manufacturers to create folders in Jenkins
     def ManufacturerArray = []
-    
+
     // Create a list of BuildTarget objects
     def BuildTargetArray = []
 
@@ -134,7 +134,7 @@ class BuildTargetList {
             }
 
 			else {
-			    
+
 				println "Getting build targets for $dirName"
 				// This build has subdirectories - get them
 				// Build targets are <dirname>_<machinename> so filter on <dirname>_*
@@ -149,7 +149,7 @@ class BuildTargetList {
 					String targetString = cmdOut
 					println "PreSplit Using $targetString "
 
-					// Since there are valid build targets, add this manufacturer to the list of 
+					// Since there are valid build targets, add this manufacturer to the list of
 					//  manufacturers so a folder for it can be created in Jenkins.
 
 					ManufacturerArray.add( dirName )
@@ -212,8 +212,9 @@ targetList.getMachines()
 // buildTargetInfo.machine will be valid.
 //
 targetList.ManufacturerArray.each {
-	println "---> Creating manufacturer folder ${it}"				  
-	folder( it ) {
+	println "---> Creating manufacturer folder ${it}"
+	// Without the / in front, folders get created in the Seed Jobs folder.
+	folder( "/${it}" ) {
 		description "${it} build targets"
 	}
 
@@ -221,7 +222,7 @@ targetList.ManufacturerArray.each {
 
 targetList.BuildTargetArray.each {
 	//		println "Will make ${it.machine} with ${it.buildEnv}"
-	// save this so it doesn't get replaced		
+	// save this so it doesn't get replaced
 	def buildTargetInfo = it
 
 	println "Naming job ${buildTargetInfo.machine}"
