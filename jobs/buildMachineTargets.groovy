@@ -13,13 +13,13 @@ def onieBranch="master"
 def stageName="checkout ONIE"
 println "---> ${curFileName} Checking out branch ${onieBranch} from ${onieURL}"
 
-
+//
+// Class to hold data to generate actual build jobs from
 class BuildTarget {
     def manufacturer
     def machine
     def buildEnv
     def makeTarget
-
 }
 
 class BuildTargetList {
@@ -31,10 +31,12 @@ class BuildTargetList {
     List<String> checkoutCmds = new ArrayList<>()
 
     String myMsg="---> REBELLL HEY!"
-    String myCWD=""
     String dirPaths
     String machineList
 
+    // Create a list of Manufacturers to create folders in Jenkins
+    def ManufacturerArray = []
+    
     // Create a list of BuildTarget objects
     def BuildTargetArray = []
 
@@ -123,16 +125,16 @@ class BuildTargetList {
 				println "Hit kvm_x86_64"
 				BuildArray.add( it )
 
-				BuildTargetArray.add( new BuildTarget( manufacturer: it, machine: it, buildEnv: "debian9", makeTarget: " make -j4 MACHINE=kvm_x86_64 all demo recovery-iso" ) )
+				BuildTargetArray.add( new BuildTarget( manufacturer: it.trim(), machine: it.trim(), buildEnv: "debian9", makeTarget: " make -j4 MACHINE=kvm_x86_64 all demo recovery-iso" ) )
 			}
 			else if ( it.contains( "qemu_armv") ) {
 				println "Hit qemu_armv target "
 				BuildArray.add( it )
-				BuildTargetArray.add( new BuildTarget( manufacturer: it, machine: it, buildEnv: "debian9", makeTarget: " make -j4 MACHINE=${dirName} all" ) )
+				BuildTargetArray.add( new BuildTarget( manufacturer: it.trim(), machine: it.trim(), buildEnv: "debian9", makeTarget: " make -j4 MACHINE=${dirName} all" ) )
             }
 
 			else {
-
+			    
 				println "Getting build targets for $dirName"
 				// This build has subdirectories - get them
 				// Build targets are <dirname>_<machinename> so filter on <dirname>_*
@@ -147,6 +149,10 @@ class BuildTargetList {
 					String targetString = cmdOut
 					println "PreSplit Using $targetString "
 
+					// Since there are valid build targets, add this manufacturer to the list of 
+					//  manufacturers so a folder for it can be created in Jenkins.
+
+					ManufacturerArray.add( dirName )
 
 					def localTargets = targetString.split( "${onieCheckoutDir}/machine/" )
 
@@ -159,7 +165,7 @@ class BuildTargetList {
 		        			}
 			        		else {
 								BuildArray.add( it )
-								BuildTargetArray.add( new BuildTarget( manufacturer: it, machine: it, buildEnv: "debian9", makeTarget: "make -j4 MACHINEROOT=../machine/${dirName} MACHINE=${dirName} all demo " ) )
+								BuildTargetArray.add( new BuildTarget( manufacturer: dirName.trim(), machine: it.trim(), buildEnv: "debian9", makeTarget: "make -j4 MACHINEROOT=../machine/${dirName} MACHINE=${dirName} all demo " ) )
 							}
 						}//localTargets.each
 						//					BuildArray.add(  localTargets )
@@ -188,7 +194,7 @@ class BuildTargetList {
     }//getMachines
 }// BuildTargetList
 
-def foo = new BuildTargetList()
+def targetList = new BuildTargetList()
 
 //shell( "pwd ; ls -l ")
 //shell("find onie/machine -maxdepth 1 > outfile.txt" )
@@ -197,45 +203,55 @@ def foo = new BuildTargetList()
 
 def outputFile = "outfile.txt"
 
-def aJob = job('ONIE build') {
-	// any system labeled 'onie' can build.
-	label 'onie'
-	description 'Create ONIE builds'
-	parameters {
-		choiceParam('Build Targets', [ 'all','recovery-iso','demo' ], 'ONIE argument to use')
-		stringParam("buildDebug", "none", "Debug build. Default = none. Options: skipDownload, skipToolBuild ")
+//
+// get all the information about what can be built and how
+targetList.getMachines()
 
-
-	}//parameters
-	//			def filecontents = readfile( outputFile )
-
-	steps {
-		shell( "if [ !  -d onie ]; then git clone --branch ${onieBranch} ${onieURL} ; fi" )
-
+//
+// create folders so that the machine paths below that use
+// buildTargetInfo.machine will be valid.
+//
+targetList.ManufacturerArray.each {
+	println "---> Creating manufacturer folder ${it}"				  
+	folder( it ) {
+		description "${it} build targets"
 	}
 
-	steps {
-		println "Java pwd is ${foo.myCWD}"
-		foo.getMachines()
-		println "Machine result ${foo.myCmdResult}"
-		//		println "Machine list ${foo.machineList}"
-		println "Machine list ${foo.BuildArray}"
-		//			shell( "ls -l onie/machine > outfile.txt" )
+}
+
+targetList.BuildTargetArray.each {
+	//		println "Will make ${it.machine} with ${it.buildEnv}"
+	// save this so it doesn't get replaced		
+	def buildTargetInfo = it
+
+	println "Naming job ${buildTargetInfo.machine}"
+	def aJob = job( buildTargetInfo.machine) {
+		// any system labeled 'onie' can build.
+		//	label "${buildTargetInfo.manufacturer} ${buildTargetInfo.machine}"
+		label "${buildTargetInfo.manufacturer} ${buildTargetInfo.machine}"
+		description "Build ONIE for ${buildTargetInfo.manufacturer} ${buildTargetInfo.machine}"
+		parameters {
+			choiceParam('Build Targets', [ 'all','recovery-iso','demo' ], 'ONIE argument to use')
+			stringParam("buildDebug", "none", "Debug build. Default = none. Options: skipDownload, skipToolBuild ")
+
+
+		}//parameters
 		//			def filecontents = readfile( outputFile )
-		//			shell( "pwd ; ls -l ")
 
-		//			shell("find onie/machine -maxdepth 1 > outfile.txt" )
+		steps {
+			shell( "if [ !  -d onie ]; then git clone --branch ${onieBranch} ${onieURL} ; fi" )
 
-		//			println "File contents ${filecontents}"
-		//			def fileContents =readFileFromWorkspace('outfile.txt' )
-		//			echo "${fileContents}"
-		//			output = ${ shell("find onie/machine -maxdepth 1" ) }
+		}
 
-		//def manulist =  sh( returnStdout: true, script: 'find onie/machine -maxdepth ').trim
-		//println "Manufacturer list: ${manulist}"
-		println( "done!" )
+		steps {
+			shell "make -C onie/build-config -j4 ${buildTargetInfo.makeTarget}"
+			//	println "Machine result ${targetList.myCmdResult}"
+			//		println "Machine list ${targetList.machineList}"
+			//println "Machine list ${targetList.BuildArray}"
+			//		println( "done!" )
 
-	}//steps
-}//test job
+		}//steps
+	}//test job
 
+}// targetList.BuildTargetArray.each
 println "---> ${curFileName} Done."
