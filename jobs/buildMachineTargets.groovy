@@ -96,11 +96,21 @@ class BuildTargetList {
 
 		// don't particularly care if this works or not
 		//	runCommand "rm -rf ${onieCheckoutDir}"
-		println "Commented out delete of ONIE to save debug time."
+	println "Commented out delete of ONIE to save debug time."
+	println "---> Cloning to ${onieCheckoutDir}"
 		runCommand "git clone https://github.com/opencomputeproject/onie.git ${onieCheckoutDir}"
 		println "Got out ${cmdOut}"
 		println "Got err ${cmdErr}"
-		runCommand "find  ${onieCheckoutDir}/machine -maxdepth 1"
+	runCommand "find  ${onieCheckoutDir}/machine -maxdepth 1"
+	if( cmdErr.size() > 0 ) {
+	    println "---> ONIE directory structure looks bad. Deleting and trying again."
+	    runCommand "rm -rf ${onieCheckoutDir}"
+	    println "---> Second try checking out ONIE"
+	    runCommand "git clone https://github.com/opencomputeproject/onie.git ${onieCheckoutDir}"
+	    if( cmdErr.size() > 0 ) {
+
+	    }
+	}
 		println "Got out ${cmdOut}"
 		println "Got err ${cmdErr}"
 
@@ -125,12 +135,12 @@ class BuildTargetList {
 				println "Hit kvm_x86_64"
 				BuildArray.add( it )
 
-				BuildTargetArray.add( new BuildTarget( manufacturer: it.trim(), machine: it.trim(), buildEnv: "debian9", makeTarget: " make -j4 MACHINE=kvm_x86_64 all demo recovery-iso" ) )
+				BuildTargetArray.add( new BuildTarget( manufacturer: it.trim(), machine: it.trim(), buildEnv: "debian9", makeTarget: "  MACHINE=kvm_x86_64 " ) )
 			}
 			else if ( it.contains( "qemu_armv") ) {
 				println "Hit qemu_armv target "
 				BuildArray.add( it )
-				BuildTargetArray.add( new BuildTarget( manufacturer: it.trim(), machine: it.trim(), buildEnv: "debian9", makeTarget: " make -j4 MACHINE=${dirName} all" ) )
+				BuildTargetArray.add( new BuildTarget( manufacturer: it.trim(), machine: it.trim(), buildEnv: "debian9", makeTarget: "  MACHINE=${dirName}" ) )
             }
 
 			else {
@@ -164,8 +174,9 @@ class BuildTargetList {
 	         				    println "Skipping null it"
 		        			}
 			        		else {
-								BuildArray.add( it )
-								BuildTargetArray.add( new BuildTarget( manufacturer: dirName.trim(), machine: it.trim(), buildEnv: "debian9", makeTarget: "make -j4 MACHINEROOT=../machine/${dirName} MACHINE=${dirName} all demo " ) )
+				BuildArray.add( it )
+				//
+				BuildTargetArray.add( new BuildTarget( manufacturer: dirName.trim(), machine: it.trim(), buildEnv: "debian9", makeTarget: "MACHINEROOT=../machine/${dirName}  MACHINE=${dirName}" ) )
 							}
 						}//localTargets.each
 						//					BuildArray.add(  localTargets )
@@ -229,8 +240,7 @@ targetList.BuildTargetArray.each {
 	// use leading / to put this job in the top level Manufacturer folder
 	def aJob = job( "/${buildTargetInfo.machine}" ) {
 		// any system labeled 'onie' can build.
-		//	label "${buildTargetInfo.manufacturer} ${buildTargetInfo.machine}"
-		label "${buildTargetInfo.manufacturer} ${buildTargetInfo.machine}"
+		label 'onie'
 		description "Build ONIE for ${buildTargetInfo.manufacturer} ${buildTargetInfo.machine}"
 		parameters {
 			choiceParam('Build Targets', [ 'all','recovery-iso','demo' ], 'ONIE argument to use')
@@ -245,8 +255,11 @@ targetList.BuildTargetArray.each {
 
 		}
 
-		steps {
-			shell "make -C onie/build-config -j4 ${buildTargetInfo.makeTarget}"
+	steps {
+//	    def buildCommand = "
+				//								BuildTargetArray.add( new BuildTarget( manufacturer: dirName.trim(), machine: it.trim(), buildEnv: "debian9", makeTarget: "make -j4 MACHINEROOT=../machine/${dirName} MACHINE=${dirName} all demo " ) )
+	    shell "due --run-image due-onie-build --command export PATH=\"/sbin:/usr/sbin:\$PATH\" \\; make -C /build MACHINEROOT=../machine/${buildTargetInfo.machine}  MACHINE=${buildTargetInfo.machine} all demo "	    
+//			shell "make -C onie/build-config -j4 ${buildTargetInfo.makeTarget}"
 			//	println "Machine result ${targetList.myCmdResult}"
 			//		println "Machine list ${targetList.machineList}"
 			//println "Machine list ${targetList.BuildArray}"
