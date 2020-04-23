@@ -281,6 +281,12 @@ try {
 	       stringParam('BUILD_TARGETS', 'all demo', 'Default = all demo . Options: clean, distclean, recovery-iso, etc' )
 		
             }//parameters
+
+	    // check for source changes daily
+	    triggers {
+		scm('@daily')
+	    }
+	    
 	    // use JobDSL to create a Git panel in the job
 	    scm {
 		git {
@@ -339,3 +345,7 @@ try {
 }
 
 println "---> ${curFileName} Done."
+
+
+
+
