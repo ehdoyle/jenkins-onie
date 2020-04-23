@@ -271,23 +271,34 @@ try {
 
         println "Naming job ${buildTargetInfo.machine}"
         // use leading / to put this job in the top level Manufacturer folder
-        def aJob = job( "/${buildTargetInfo.machine}" ) {
+        def aJob = freeStyleJob( "/${buildTargetInfo.machine}" ) {
             // any system labeled 'onie' can build.
             label 'onie'
             description "Build ONIE for ${buildTargetInfo.manufacturer} ${buildTargetInfo.machine}"
             parameters {
-                choiceParam('Build Targets', [ 'all','recovery-iso','demo' ], 'ONIE argument to use')
-                stringParam("buildDebug", "none", "Debug build. Default = none. Options: skipDownload, skipToolBuild ")
-
-
+		//stringParam('buildDebug', "none", "Debug build. Default = none. Options: skipDownload, skipToolBuild ")
+		//Takes:  var name, default, description
+	       stringParam('BUILD_TARGETS', 'all demo', 'Default = all demo . Options: clean, distclean, recovery-iso, etc' )
+		
             }//parameters
+	    // use JobDSL to create a Git panel in the job
+	    scm {
+		git {
+		    remote {
+			name('ONIE upstream')
+			url( onieURL )
+			branch('master')
+		    }
+		    extensions {
+			//cleanAfterCheckout()
+			// check out as /*.../<manufacturer>/<platform>/onie 
+			relativeTargetDirectory('onie')
+		    }
+		}
+	    }
 
             steps {
-                shell( "if [ !  -d onie ]; then git clone --branch ${onieBranch} ${onieURL} ; fi" )
 
-            }
-
-            steps {
                 //      def buildCommand = "
                 //                                                          BuildTargetArray.add( new BuildTarget( manufacturer: dirName.trim(), machine: it.trim(), buildEnv: "debian9", makeTarget: "make -j4 MACHINEROOT=../machine/${dirName} MACHINE=${dirName} all demo " ) )
 
@@ -301,7 +312,9 @@ try {
                 //println "Workspace is ${WORKSPACE}"
                 try {
                     // TODO: The  /work/onie/jenkins-node-builds/workspace/ should be a variable
-                    shell (" due --run-image ${buildTargetInfo.buildEnv}  --command export PATH=\"/sbin:/usr/sbin:\$PATH\" \\; make -j ${buildTargetInfo.jobs}  -C /work/onie/jenkins-node-builds/workspace/${buildTargetInfo.machine}/onie/build-config ${buildTargetInfo.makeTarget}  all demo " )
+		    // NOTE: BUILD_TARGETS is set as a parameter above. If you don't \ the $, you'll get errors
+		    //       about Jenkins not recognizing it, and waste an hour plus figuring it out.
+                    shell (" due --run-image ${buildTargetInfo.buildEnv}  --command export PATH=\"/sbin:/usr/sbin:\$PATH\" \\; make -j ${buildTargetInfo.jobs}   -C /work/onie/jenkins-node-builds/workspace/${buildTargetInfo.machine}/onie/build-config ${buildTargetInfo.makeTarget} \$BUILD_TARGETS " )
                 }catch( Exception e ) {
                     println "---> ERROR BUILDING ONIE"
                     println "=====> ${e}"
