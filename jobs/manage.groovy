@@ -10,20 +10,25 @@
 
 def curFileName="manage.groovy"
 
-println "actual parsing code goes here."
+
 
 def onieURL="https://github.com/opencomputeproject/onie.git"
 def onieBranch="master"
 def stageName="checkout ONIE"
 println "---> ${curFileName} Checking out branch ${onieBranch} from ${onieURL}"
 
-node('master') {
-	jenkins.model.Jenkins.instance.getAllItems(jenkins.model.ParameterizedJobMixIn.ParameterizedJob.class).each {
- 
-		if(it.isDisabled()){
-			println it.fullName;
-		}
+def aJob = freeStyleJob('JobManagement'){
+
+    label("Management" )
+
+    steps {
+	println "Starting management"
+    }
+    
+//    jenkins.model.Jenkins.instance.getAllItems(jenkins.model.ParameterizedJobMixIn.ParameterizedJob.class).each {	
+//	if(it.isDisabled()){
+//	    println it.fullName;
+//	}
 		
-	}
 
 }// node master
