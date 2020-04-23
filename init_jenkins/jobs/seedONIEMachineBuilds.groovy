@@ -61,6 +61,18 @@ String myDir = new File(".").getAbsoluteFile().getParent()
 	println "--> seedONIEMachineBuilds.groovy creating machine build jobs in ${scriptDir} myDir is ${myDir}"
 
 
+	// set up management
+	    step([
+        $class: 'ExecuteDslScripts',
+        targets: "jobs/manage.groovy",		
+        ignoreMissingFiles: true,
+        ignoreExisting: false,
+        removedJobAction: RemovedJobAction.DELETE,
+        removedViewAction: RemovedViewAction.DELETE,
+        lookupStrategy: LookupStrategy.SEED_JOB,
+        additionalClasspath: "src/main/groovy\nlib/*.jar"
+    ])
+	
 	// this describes the seed job entry that will be created.
 	// (again, _running_ this job after it's instantiated will then
 	// create all the pacakge jobs.
@@ -76,7 +88,6 @@ String myDir = new File(".").getAbsoluteFile().getParent()
 	// buildComponents.Groovy
     step([
         $class: 'ExecuteDslScripts',
-		//        targets: "${home_dir}/workspace/SeedJobs/Seed_ONIE/onie_builds/jobs/buildMachineTargets.groovy",
         targets: "jobs/buildMachineTargets.groovy",		
         ignoreMissingFiles: true,
         ignoreExisting: false,
@@ -85,6 +96,7 @@ String myDir = new File(".").getAbsoluteFile().getParent()
         lookupStrategy: LookupStrategy.SEED_JOB,
         additionalClasspath: "src/main/groovy\nlib/*.jar"
     ])
+
 
 	// You can get some basic debug this way:
 	// Commented out for cleanliness
