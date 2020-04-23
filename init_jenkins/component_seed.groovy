@@ -99,10 +99,10 @@ job("${seed_jobs_folder}/refresh_jenkins_component_slaves")
 }
 
 
-/*
+
 // This should do the same thing as the slave jobs above.
 // Keep it around, commented out as an example of another way to do things.
-pipelineJob("create_build_slaves")
+pipelineJob("Manage")
 {
 	println "---> Reading from workspace configureBuildNodes.groovy as type PIPELINE JOB"
 
@@ -110,13 +110,13 @@ pipelineJob("create_build_slaves")
 	    definition {
 		// Continuation-Passing-Style transform?
 		cps {
-			script( readFileFromWorkspace("${init_jobs_folder}/jobs/configureBuildNodes.groovy"))			
+			script( readFileFromWorkspace("${init_jobs_folder}/jobs/manage.groovy"))			
 			sandbox()
 		}
     }
 
 }
- */
+
 
 // To add other pipeline jobs, just cut and paste the
 // above example
