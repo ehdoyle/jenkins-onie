@@ -303,6 +303,25 @@ try {
 		}
 	    }
 
+	    // send email when anything exciting happens
+	    publishers {
+		extendedEmail {
+		    recipientList('adoyle@cumulusnetworks.com')
+		    defaultSubject("ONIE ${buildTargetInfo.machine}")
+		    defaultContent('something broke?')
+		    contentType('text/html')
+		    triggers {
+			stillUnstable {
+			    subject("ONIE busted ${buildTargetInfo.machine} Triggered: '$BUILD_CAUSE' ")
+			    content('$BUILD_URL')
+			    sendTo {
+				developers()
+			    }//sendTo
+			}// stillUnstable
+		    }//triggers
+		}//extendedEmail
+	    }//publishers
+	    
             steps {
 
                 //      def buildCommand = "
