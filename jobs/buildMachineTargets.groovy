@@ -312,7 +312,7 @@ try {
 		    contentType('text/html')
 		    triggers {
 			stillUnstable {
-			    subject("ONIE busted ${buildTargetInfo.machine} Triggered: '$BUILD_CAUSE' ")
+			    subject("ONIE busted ${buildTargetInfo.machine} Triggered: \$BUILD_CAUSE ")
 			    content('$BUILD_URL')
 			    sendTo {
 				developers()
