@@ -15,20 +15,69 @@ def curFileName="manage.groovy"
 def onieURL="https://github.com/opencomputeproject/onie.git"
 def onieBranch="master"
 def stageName="checkout ONIE"
-println "---> ${curFileName} Checking out branch ${onieBranch} from ${onieURL}"
+println "---> ${curFileName} Running"
 
-def aJob = freeStyleJob('JobManagement'){
 
-    label("Management" )
+class allJobs {
 
-    steps {
-	println "Starting management"
+    def JobArray = []
+
+
+    void GetJobs() {
+	jenkins.model.Jenkins.instance.getAllItems().each {
+	    jobArray.add( it )
+	}
     }
-    
-//    jenkins.model.Jenkins.instance.getAllItems(jenkins.model.ParameterizedJobMixIn.ParameterizedJob.class).each {	
-//	if(it.isDisabled()){
-//	    println it.fullName;
-//	}
-		
 
-}// node master
+}
+    
+ 
+//jenkins.model.Jenkins.instance.getAllItems(jenkins.model.ParameterizedJobMixIn.ParameterizedJob.class).each {
+//jenkins.model.Jenkins.instance.getAllItems().each {	
+//    if(it.isDisabled()){
+//	println "Getallitems Disabled: ${it.fullName}"
+//    }
+//    println "Getallitems - Got: ${it.fullName} "
+//}
+
+println "Starting management"
+
+//
+// Define a scripted groovy command that can run as a step
+// in this job. Pre creation Groovy doesn't work once the job
+// is set up, so getting jobs has to be done in 'steps'
+
+def theScript = '''
+import hudson.model.*
+for (job in jenkins.model.Jenkins.instance.getAllItems()) 
+ {   println job.fullName }
+ println holdresult
+ println System.getenv()
+def pa = new ParametersAction([
+  new StringParameterValue("miniVersion", "Hereisyourdata" )
+])
+
+'''
+// end script
+
+job('JobManagement') {
+    def myData
+    println "pre steps"
+    myData = System.getenv('miniVersion')
+    println "Data is ${myData}"
+    steps {
+	// binding () passes a variable in to the script.
+	systemGroovyCommand(theScript) {
+	    binding( "holdresult", "42" )
+
+    myData = System.getenv('miniVersion')
+    println "Data is now ${myData}"
+	    
+	}
+
+	// figure out getting a value here
+    }//steps
+}//aJob    
+
+
+println "---> ${curFileName} Done running."
