@@ -12,7 +12,9 @@ def curFileName="buildMachineTargets.groovy"
 
 println "actual parsing code goes here."
 
-def onieURL="https://github.com/opencomputeproject/onie.git"
+def onieMasterURL="https://github.com/opencomputeproject/onie.git"
+def onieAlexURL="https://github.com/ehdoyle/onie.git"
+def onieURL= onieAlexURL
 def onieBranch="master"
 def stageName="checkout ONIE"
 println "---> ${curFileName} Checking out branch ${onieBranch} from ${onieURL}"
@@ -37,7 +39,11 @@ class BuildTargetList {
     def cmdOut
     def cmdErr
     // top of file definition is out of scope for this...
-    def onieURL="https://github.com/opencomputeproject/onie.git"
+    def onieMasterURL="https://github.com/opencomputeproject/onie.git"
+    def onieAlexURL="https://github.com/ehdoyle/onie.git"
+    def onieURL= onieAlexURL
+    
+
     // list of strings
     List<String> checkoutCmds = new ArrayList<>()
 
