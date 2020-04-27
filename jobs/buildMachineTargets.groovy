@@ -32,6 +32,12 @@ class BuildTarget {
     def makeTarget
     // Suggested number of parallel build jobs
     def jobs
+	// CPU Architecture
+	def architecture
+	// Notes
+	def notes
+	// Last release it built for
+	def release
 }
 
 class BuildTargetList {
@@ -101,8 +107,55 @@ class BuildTargetList {
     // Checks out onie and parses the machines directory to get build targets
     // Modifies:
     //    BuildTargetArray should have a bunch of build target objects
+    //    ManufacturerArray will have the manufacturers, to create directories.	
+	def getMachines() {
+
+        // add commands to list
+        def onieCheckoutDir = "/var/jenkins_home/workspace/SeedJobs/Seed_ONIE/oniecheckout"
+
+        println "---> Commented out delete of ONIE to save debug time."
+        runCommand "rm -rf ${onieCheckoutDir}"
+
+        println "---> Cloning to ${onieCheckoutDir}"
+        runCommand "git clone ${onieURL} ${onieCheckoutDir}"
+        println "Got out ${cmdOut}"
+        println "Got err ${cmdErr}"
+        runCommand "find  ${onieCheckoutDir}/machine -maxdepth 1"
+        if( cmdErr.size() > 0 ) {
+            println "---> ONIE directory structure looks bad. Deleting and trying again."
+            runCommand "rm -rf ${onieCheckoutDir}"
+            println "---> Second try checking out ONIE"
+            runCommand "git clone ${onieURL}  ${onieCheckoutDir}"
+            if( cmdErr.size() > 0 ) {
+                println "ERROR! Failed to clone ${onieURL}"
+                return -1
+            }else {
+        
+            }
+        }
+		println("---> Reading build-config/scripts/onie-build-targets.json" )
+		def ONIETargetsFile = new File( "${onieCheckoutDir}/onie/build-config/scripts/onie-build-targets.json")
+		def ONIETargetsProperties = new ConfigSlurper().parse(ONIETargetsFile.toURI().toURL())
+
+		ONIETargetsProperties.Targets.Manufacturer.each() {
+			println "Test debug Manufacturer: ${it}"
+
+		}
+
+		ONIETargetsProperties.Targets.Platform.each() {
+			println "Test debug Platform: ${it}"
+
+		}
+        println "Got out ${cmdOut}"
+        println "Got err ${cmdErr}"
+
+	}//getMachines
+    // Does:
+    // Checks out onie and parses the machines directory to get build targets
+    // Modifies:
+    //    BuildTargetArray should have a bunch of build target objects
     //    ManufacturerArray will have the manufacturers, to create directories.
-    def getMachines() {
+    def OldGetMachines() {
         // add commands to list
         def onieCheckoutDir = "/var/jenkins_home/workspace/SeedJobs/Seed_ONIE/oniecheckout"
 
