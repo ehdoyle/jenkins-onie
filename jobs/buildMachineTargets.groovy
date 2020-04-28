@@ -7,6 +7,7 @@
 //       println issued as part of DSL context will show up
 //       in the Jenkins console output
 
+import groovy.json.JsonSlurper
 
 def curFileName="buildMachineTargets.groovy"
 
@@ -19,25 +20,35 @@ def onieBranch="master"
 def stageName="checkout ONIE"
 println "---> ${curFileName} Checking out branch ${onieBranch} from ${onieURL}"
 
-//
-// Class to hold data to generate actual build jobs from
-class BuildTarget {
-    // commpany making the switch (not set for virtual machines)
-    def manufacturer
-    // Machine model name
-    def machine
+
+class ONIEPlatform {
+    def Manufacturer
+    // Machine model name    
+    def Name
     // Build environment to use for it
-    def buildEnv
-    // Build commands to make it
-    def makeTarget
+    def BuildEnv
+    // build commands to make it
+    def MakeTarget 
     // Suggested number of parallel build jobs
-    def jobs
-	// CPU Architecture
-	def architecture
-	// Notes
-	def notes
-	// Last release it built for
-	def release
+    def Jobs = 4
+    // release it built for
+    def Release
+    // CPU Architecture
+    def Architecture
+    // Notes
+    def Notes
+
+    def printContents () {
+	println "--> Platform object."
+	println "  Manufacturer:  ${Manufacturer}"
+	println "  Name:          ${Name}"
+	println "  Build env:     ${BuildEnv}"
+	println "  Release:       ${Release}"
+	println "  Architecture:  ${Architecture}"
+	println "  Notes:         ${Notes}"
+	println "  Make target:   ${MakeTarget}"
+	println "  Jobs:          ${Jobs}"
+    }
 }
 
 class BuildTargetList {
@@ -51,20 +62,21 @@ class BuildTargetList {
     
 
     // list of strings
-    List<String> checkoutCmds = new ArrayList<>()
+//    List<String> checkoutCmds = new ArrayList<>()
 
-    String machineList
+//    String machineList
 
     // Create a list of Manufacturers to create folders in Jenkins
-    def ManufacturerArray = []
+//    def ManufacturerArray = []
 
     // Create a list of BuildTarget objects
-    def BuildTargetArray = []
+//    def BuildTargetArray = []
 
     // Create list of buildable machine targets
-    def BuildArray = []
+//    def BuildArray = []
 
 
+    def ONIEPlatformArray = []
     // debug to see what our options are with any given object
     void printAllMethods( obj ){
         if( !obj ){
@@ -108,16 +120,16 @@ class BuildTargetList {
     // Modifies:
     //    BuildTargetArray should have a bunch of build target objects
     //    ManufacturerArray will have the manufacturers, to create directories.	
-	def getMachines() {
+    def getMachines() {
 
         // add commands to list
         def onieCheckoutDir = "/var/jenkins_home/workspace/SeedJobs/Seed_ONIE/oniecheckout"
 
         println "---> Commented out delete of ONIE to save debug time."
-        runCommand "rm -rf ${onieCheckoutDir}"
+	        runCommand "rm -rf ${onieCheckoutDir}"
 
         println "---> Cloning to ${onieCheckoutDir}"
-        runCommand "git clone ${onieURL} ${onieCheckoutDir}"
+	        runCommand "git clone ${onieURL} ${onieCheckoutDir}"
         println "Got out ${cmdOut}"
         println "Got err ${cmdErr}"
         runCommand "find  ${onieCheckoutDir}/machine -maxdepth 1"
@@ -128,157 +140,58 @@ class BuildTargetList {
             runCommand "git clone ${onieURL}  ${onieCheckoutDir}"
             if( cmdErr.size() > 0 ) {
                 println "ERROR! Failed to clone ${onieURL}"
-                return -1
+                exit 1
             }else {
-        
+		println "----> double error fallthrough"
             }
         }
-		println("---> Reading build-config/scripts/onie-build-targets.json" )
-		def ONIETargetsFile = new File( "${onieCheckoutDir}/onie/build-config/scripts/onie-build-targets.json")
-		def ONIETargetsProperties = new ConfigSlurper().parse(ONIETargetsFile.toURI().toURL())
+	println "---> Gonna do file"
+	def ONIETargetsFile = new File( "${onieCheckoutDir}/build-config/scripts/onie-build-targets.json")
+	println "---> Reading file ${ONIETargetsFile}"
+	Map ONIETargetsProperties = new JsonSlurper().parseText( ONIETargetsFile.getText("UTF-8") )		
 
-		ONIETargetsProperties.Targets.Manufacturer.each() {
-			println "Test debug Manufacturer: ${it}"
+	println "---> mad props!"
+	ONIETargetsProperties.Platform.each() {
+	    String platName = it.Name.trim()
 
-		}
+	    // Defaults that will be true for most platforms.
+	    String makeCommand = "MACHINEROOT=../machine/${it.Manufacturer.trim()}  MACHINE=${it.Name.trim()}"
+	    String buildEnv = "due-onie-build-debian-9"
+	    // Virtual systems don't have a manufacturer dir
+	    switch ( platName ) {
+		case "kvm_x86_64":
+		case "qemu_armv7a":
+		case "qemu_armv8a":
+		    makeCommand = " MACHINE=${platName} "
+		    break
+		}// switch
 
-		ONIETargetsProperties.Targets.Platform.each() {
-			println "Test debug Platform: ${it}"
+	    // Support multiple build environments
+	    switch ( it.BuildEnv.trim() ) {
+		case "Debian8":
+		    buildEnv = "due-onie-build-debian-8"
+		    break
+	    }//switch
 
-		}
-        println "Got out ${cmdOut}"
-        println "Got err ${cmdErr}"
+	    def platFields = [
+		Manufacturer : it.Manufacturer.trim(),
+		Name  : platName,
+		BuildEnv : buildEnv,
+		Release : it.Release.trim(),
+		Architecture : it.Architecture.trim(),
+		Notes : it.Notes.trim(),
+		Jobs  : 4,
+		MakeTarget : makeCommand 
+	    ]
 
-	}//getMachines
-    // Does:
-    // Checks out onie and parses the machines directory to get build targets
-    // Modifies:
-    //    BuildTargetArray should have a bunch of build target objects
-    //    ManufacturerArray will have the manufacturers, to create directories.
-    def OldGetMachines() {
-        // add commands to list
-        def onieCheckoutDir = "/var/jenkins_home/workspace/SeedJobs/Seed_ONIE/oniecheckout"
+            ONIEPlatformArray.add( new ONIEPlatform( platFields ) )
+	    println "Test debug Platform Name: ${platName} DONE"
+	    println "--->>"
+	    
+	}
 
-        println "---> Commented out delete of ONIE to save debug time."
-        //      runCommand "rm -rf ${onieCheckoutDir}"
-
-        println "---> Cloning to ${onieCheckoutDir}"
-        runCommand "git clone ${onieURL} ${onieCheckoutDir}"
-        println "Got out ${cmdOut}"
-        println "Got err ${cmdErr}"
-        runCommand "find  ${onieCheckoutDir}/machine -maxdepth 1"
-        if( cmdErr.size() > 0 ) {
-            println "---> ONIE directory structure looks bad. Deleting and trying again."
-            runCommand "rm -rf ${onieCheckoutDir}"
-            println "---> Second try checking out ONIE"
-            runCommand "git clone ${onieURL}  ${onieCheckoutDir}"
-            if( cmdErr.size() > 0 ) {
-                println "ERROR! Failed to clone ${onieURL}"
-                return -1
-            }else {
-                runCommand "find  ${onieCheckoutDir}/machine -maxdepth 1"
-            }
-
-        }
-        println "Got out ${cmdOut}"
-        println "Got err ${cmdErr}"
-
-        // put the data where it can be read by the Jenkins Job
-        machineList = cmdOut
-
-        // Load the array with everything. This trims off the leading path.
-        def MachineArray = machineList.split( "${onieCheckoutDir}/machine/")
-
-        // for every entry in MachineArray
-        MachineArray.each {
-            // it is a language supplied iterator that refreences the current object in MachineArray
-            println "Machine array iteration $it"
-
-            // Name of DUE container to build with
-            def DUEDebianNine="due-onie-build-debian-9"
-            def DUEDebianEight="due-onie-build-debian-8"
-
-            // get rid of trailing spaces as it breaks the _* below,
-            // but add the string as 'it' with whitespace, otherwise the
-            // array becomes a comma separated list.
-            String  dirName = it.trim()
-
-            if ( it.contains( "kvm_x86_64") ) {
-                println "Hit kvm_x86_64"
-                BuildArray.add( it )
-
-                BuildTargetArray.add( new BuildTarget( manufacturer: it.trim(),\
-                                                      machine: it.trim(), \
-                                                      buildEnv: DUEDebianNine, \
-                                                      makeTarget: "  MACHINE=${dirName} ",\
-                                                      jobs: 4 ) )
-            }
-            else if ( it.contains( "qemu_armv") ) {
-                println "Hit qemu_armv target "
-                BuildArray.add( it )
-                BuildTargetArray.add( new BuildTarget( manufacturer: it.trim(), \
-                                                      machine: it.trim(), \
-                                                      buildEnv: DUEDebianNine, \
-                                                      makeTarget: "  MACHINE=${dirName}", \
-                                                      jobs: 4 ) )
-            }
-
-            else {
-                println "Getting build targets for $dirName"
-                // This build has subdirectories - get them
-                // Build targets are <dirname>_<machinename> so filter on <dirname>_*
-                runCommand "find ${onieCheckoutDir}/machine/${dirName} -maxdepth 1 -iname ${dirName}_*"
-                //                              println "Got out here ${cmdOut}"
-                //                              println "Got err here ${cmdErr}"
-                if( cmdErr.size() > 0 ) {
-                    println "Command returned error ${cmdErr}. Continuing"
-                }
-                else {
-                    // This being explicitly a String is VERY IMPORTANT
-                    String targetString = cmdOut
-
-                    // Since there are valid build targets, add this manufacturer to the list of
-                    //  manufacturers so a folder for it can be created in Jenkins.
-                    ManufacturerArray.add( dirName )
-
-                    def localTargets = targetString.split( "${onieCheckoutDir}/machine/" )
-
-                    localTargets.each {
-                        println "----> local target $it "
-                        //                                   printAllMethods( it )
-                        if ( !it ) {
-                            println "Skipping null it"
-                        }
-                        else {
-                            // list of things that can be built, for reference
-                            BuildArray.add( it )
-
-                            // target to build
-                            String holder = "${it}"
-                            println "got holder as ${holder}"
-                            String machineName = holder.minus( "${dirName}/" )
-                            println "got machine name as ${machineName}"
-                            BuildTargetArray.add( new BuildTarget( manufacturer: dirName.trim(),\
-                                                                  machine: it.trim(),\
-                                                                  buildEnv: DUEDebianNine, \
-                                                                  makeTarget: "MACHINEROOT=../machine/${dirName}  MACHINE=${machineName.trim()}", \
-                                                                  jobs: 4 ) )
-                        }
-                    }//localTargets.each
-                }//else find of subdirectory worked
-            }// else not emulation special case and is regular switch
-
-        }//MachineArray.each
-
-        // keep this around for reference.
-        if( 1 == 0 ) {
-            println "---> Dumping build target list"
-            BuildTargetArray.each {
-                def BuildTarget theTarget = it
-                println "Manufacturer: ${theTarget.manufacturer} Machine: ${theTarget.machine} BuildEnv: ${theTarget.buildEnv} Make command: ${theTarget.makeTarget}"
-            }// each
-        }// optional debug printout to jenkins.log
     }//getMachines
+
 }// BuildTargetList
 
 //
@@ -306,13 +219,19 @@ try {
 // buildTargetInfo.machine will be valid.
 //
 try {
-    targetList.ManufacturerArray.each {
-        println "---> Creating manufacturer folder ${it}"
-        // Without the / in front, folders get created in the Seed Jobs folder.
-        folder( "/${it}" ) {
-            description "${it} build targets"
-        } // folder
-
+    String lastFolder
+    targetList.ONIEPlatformArray.each {
+	// Every entry has a manufacturer string, so only make the
+	// folder once per unique entry
+	String newFolder = it.Manufacturer.trim()	
+	if ( lastFolder != newFolder ) {
+	    lastFolder = newFolder
+            println "---> Creating manufacturer folder ${newFolder}"
+            // Without the / in front, folders get created in the Seed Jobs folder.
+            folder( "/${newFolder}" ) {
+            description "${newFolder} build targets"
+            } // folder
+	}//lastfolder 
     } //each
 } catch ( Exception e) {
     println "---> ERROR CREATING MANUFACTURER FOLDERS."
@@ -323,21 +242,24 @@ try {
 
 
 try {
-    targetList.BuildTargetArray.each {
+
+//    println "--> dumping JSON parse."
+//    targetList.ONIEPlatformArray.each {
+//	it.printContents()
+//    }
+    targetList.ONIEPlatformArray.each {
         //          println "Will make ${it.machine} with ${it.buildEnv}"
         // save this so it doesn't get replaced
         def buildTargetInfo = it
 
-        println "Naming job ${buildTargetInfo.machine}"
+        println "Naming job ${buildTargetInfo.Name}"
         // use leading / to put this job in the top level Manufacturer folder
-        def aJob = freeStyleJob( "/${buildTargetInfo.machine}" ) {
+        def aJob = freeStyleJob( "/${buildTargetInfo.Manufacturer}/${buildTargetInfo.Name}" ) {
             // any system labeled 'onie' can build.
             label 'onie'
-            description "Build ONIE for ${buildTargetInfo.manufacturer} ${buildTargetInfo.machine}"
+            description "Build ONIE for ${buildTargetInfo.Manufacturer} ${buildTargetInfo.Name} Arch: ${buildTargetInfo.Architecture} Release: ${buildTargetInfo. Release} Notes: ${buildTargetInfo.Notes}"
             parameters {
-		//stringParam('buildDebug', "none", "Debug build. Default = none. Options: skipDownload, skipToolBuild ")
-		//Takes:  var name, default, description
-	       stringParam('BUILD_TARGETS', 'all demo', 'Default = all demo . Options: clean, distclean, recovery-iso, etc' )
+		stringParam('BUILD_TARGETS', 'all demo', 'Default = all demo . Options: clean, distclean, recovery-iso, etc' )
 		
             }//parameters
 
@@ -366,12 +288,12 @@ try {
 	    publishers {
 		extendedEmail {
 		    recipientList('adoyle@cumulusnetworks.com')
-		    defaultSubject("ONIE ${buildTargetInfo.machine}")
+	    defaultSubject("ONIE ${buildTargetInfo.Name}")
 		    defaultContent('something broke?')
 		    contentType('text/html')
 		    triggers {
 			stillUnstable {
-			    subject("ONIE busted ${buildTargetInfo.machine} Triggered: \$BUILD_CAUSE ")
+			    subject("ONIE busted ${buildTargetInfo.Name} Triggered: \$BUILD_CAUSE ")
 			    content('$BUILD_URL')
 			    sendTo {
 				developers()
@@ -398,7 +320,7 @@ try {
                     // TODO: The  /work/onie/jenkins-node-builds/workspace/ should be a variable
 		    // NOTE: BUILD_TARGETS is set as a parameter above. If you don't \ the $, you'll get errors
 		    //       about Jenkins not recognizing it, and waste an hour plus figuring it out.
-                    shell (" due --run-image ${buildTargetInfo.buildEnv}  --command export PATH=\"/sbin:/usr/sbin:\$PATH\" \\; make -j ${buildTargetInfo.jobs}   -C /work/onie/jenkins-node-builds/workspace/${buildTargetInfo.machine}/onie/build-config ${buildTargetInfo.makeTarget} \$BUILD_TARGETS " )
+                    shell (" due --run-image ${buildTargetInfo.BuildEnv }  --command export PATH=\"/sbin:/usr/sbin:\$PATH\" \\; make -j ${buildTargetInfo.Jobs}   -C /work/onie/jenkins-node-builds/workspace/${buildTargetInfo.Name}/onie/build-config ${buildTargetInfo.MakeTarget} \$BUILD_TARGETS " )
                 }catch( Exception e ) {
                     println "---> ERROR BUILDING ONIE"
                     println "=====> ${e}"
