@@ -289,7 +289,14 @@ try {
 			//cleanAfterCheckout()
 			// check out as /*.../<manufacturer>/<platform>/onie 
 			relativeTargetDirectory('onie')
+			// doc found at https://jenkinsci.github.io/job-dsl-plugin/#path/job-scm-git-extensions-cloneOptions
+			cloneOptions {
+			    depth( 1 )
+			    shallow( true )
+			    timeout( 120)
+			}
 		    }
+		    
 		}
 	    }
 
