@@ -336,7 +336,7 @@ try {
                     // TODO: The  /work/onie/jenkins-node-builds/workspace/ should be a variable
 		    // NOTE: BUILD_TARGETS is set as a parameter above. If you don't \ the $, you'll get errors
 		    //       about Jenkins not recognizing it, and waste an hour plus figuring it out.
-                    shell (" due --run-image ${buildTargetInfo.BuildEnv} ${DueMountSystemPackageCacheDir}  --command export PATH=\"/sbin:/usr/sbin:\$PATH\" ${BuildLocalCache} \\; make -j ${buildTargetInfo.Jobs}   -C /work/onie/jenkins-node-builds/workspace/${buildTargetInfo.Name}/onie/build-config ${buildTargetInfo.MakeTarget} \$BUILD_TARGETS " )
+                    shell (" due --run-image ${buildTargetInfo.BuildEnv} ${DueMountSystemPackageCacheDir}  --command export PATH=\"/sbin:/usr/sbin:\$PATH\" ${BuildLocalCache} \\; make -j ${buildTargetInfo.Jobs}   -C /work/onie/jenkins-node-builds/workspace/${buildTargetInfo.Manufacturer}/${buildTargetInfo.Name}/onie/build-config ${buildTargetInfo.MakeTarget} \$BUILD_TARGETS " )
                 }catch( Exception e ) {
                     println "---> ERROR BUILDING ONIE"
                     println "=====> ${e}"
