@@ -252,6 +252,15 @@ try {
         // save this so it doesn't get replaced
         def buildTargetInfo = it
 
+		// default to not using the host's local package cache.
+		def DueMountSystemPackageCacheDir = "" 
+		def BuildLocalCache = ""
+
+		if ( 1 == 1 ) {
+		// mount the host local cache of downloadable packages.			
+			 DueMountSystemPackageCacheDir =  " --mount-dir /var/cache/onie/download:/var/cache/onie/download "
+			 BuildLocalCache = ' export ENV_USE_ONIE_SYSTEM_CACHE=\"TRUE\" '
+		}
         println "Naming job ${buildTargetInfo.Name}"
         // use leading / to put this job in the top level Manufacturer folder
         def aJob = freeStyleJob( "/${buildTargetInfo.Manufacturer}/${buildTargetInfo.Name}" ) {
@@ -320,7 +329,7 @@ try {
                     // TODO: The  /work/onie/jenkins-node-builds/workspace/ should be a variable
 		    // NOTE: BUILD_TARGETS is set as a parameter above. If you don't \ the $, you'll get errors
 		    //       about Jenkins not recognizing it, and waste an hour plus figuring it out.
-                    shell (" due --run-image ${buildTargetInfo.BuildEnv }  --command export PATH=\"/sbin:/usr/sbin:\$PATH\" \\; make -j ${buildTargetInfo.Jobs}   -C /work/onie/jenkins-node-builds/workspace/${buildTargetInfo.Name}/onie/build-config ${buildTargetInfo.MakeTarget} \$BUILD_TARGETS " )
+                    shell (" due --run-image ${buildTargetInfo.BuildEnv} ${DueMountSystemPackageCacheDir}  --command export PATH=\"/sbin:/usr/sbin:\$PATH\" ${BuildLocalCache} \\; make -j ${buildTargetInfo.Jobs}   -C /work/onie/jenkins-node-builds/workspace/${buildTargetInfo.Name}/onie/build-config ${buildTargetInfo.MakeTarget} \$BUILD_TARGETS " )
                 }catch( Exception e ) {
                     println "---> ERROR BUILDING ONIE"
                     println "=====> ${e}"
