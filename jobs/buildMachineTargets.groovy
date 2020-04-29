@@ -126,10 +126,10 @@ class BuildTargetList {
         def onieCheckoutDir = "/var/jenkins_home/workspace/SeedJobs/Seed_ONIE/oniecheckout"
 
         println "---> Commented out delete of ONIE to save debug time."
-//	        runCommand "rm -rf ${onieCheckoutDir}"
+        runCommand "rm -rf ${onieCheckoutDir}"
 
         println "---> Cloning to ${onieCheckoutDir}"
-//	        runCommand "git clone ${onieURL} ${onieCheckoutDir}"
+        runCommand "git clone ${onieURL} ${onieCheckoutDir}"
         println "Got out ${cmdOut}"
         println "Got err ${cmdErr}"
         runCommand "find  ${onieCheckoutDir}/machine -maxdepth 1"
