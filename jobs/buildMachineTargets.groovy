@@ -22,9 +22,9 @@ println "---> ${curFileName} Checking out branch ${onieBranch} from ${onieURL}"
 
 
 class ONIEPlatform {
-    def Manufacturer
+    def Vendor
     // Machine model name    
-    def Name
+    def Platform
     // Build environment to use for it
     def BuildEnv
     // build commands to make it
@@ -40,8 +40,8 @@ class ONIEPlatform {
 
     def printContents () {
 	println "--> Platform object."
-	println "  Manufacturer:  ${Manufacturer}"
-	println "  Name:          ${Name}"
+	println "  Vendor:        ${Vendor}"
+	println "  Platform:      ${Platform}"
 	println "  Build env:     ${BuildEnv}"
 	println "  Release:       ${Release}"
 	println "  Architecture:  ${Architecture}"
@@ -66,8 +66,8 @@ class BuildTargetList {
 
 //    String machineList
 
-    // Create a list of Manufacturers to create folders in Jenkins
-//    def ManufacturerArray = []
+    // Create a list of Vendors to create folders in Jenkins
+//    def VendorArray = []
 
     // Create a list of BuildTarget objects
 //    def BuildTargetArray = []
@@ -119,17 +119,17 @@ class BuildTargetList {
     // Checks out onie and parses the machines directory to get build targets
     // Modifies:
     //    BuildTargetArray should have a bunch of build target objects
-    //    ManufacturerArray will have the manufacturers, to create directories.	
+    //    VendorArray will have the manufacturers, to create directories.	
     def getMachines() {
 
         // add commands to list
         def onieCheckoutDir = "/var/jenkins_home/workspace/SeedJobs/Seed_ONIE/oniecheckout"
 
         println "---> Commented out delete of ONIE to save debug time."
-	        runCommand "rm -rf ${onieCheckoutDir}"
+//	        runCommand "rm -rf ${onieCheckoutDir}"
 
         println "---> Cloning to ${onieCheckoutDir}"
-	        runCommand "git clone ${onieURL} ${onieCheckoutDir}"
+//	        runCommand "git clone ${onieURL} ${onieCheckoutDir}"
         println "Got out ${cmdOut}"
         println "Got err ${cmdErr}"
         runCommand "find  ${onieCheckoutDir}/machine -maxdepth 1"
@@ -148,15 +148,22 @@ class BuildTargetList {
 	println "---> Gonna do file"
 	def ONIETargetsFile = new File( "${onieCheckoutDir}/build-config/scripts/onie-build-targets.json")
 	println "---> Reading file ${ONIETargetsFile}"
-	Map ONIETargetsProperties = new JsonSlurper().parseText( ONIETargetsFile.getText("UTF-8") )		
+//	Map ONIETargetsProperties = new JsonSlurper().parseText( ONIETargetsFile.getText("UTF-8") )		
+	def ONIETargetsProperties = new JsonSlurper().parseText( ONIETargetsFile.getText("UTF-8") )		
 
+	printAllMethods( ONIETargetsProperties )
+	
 	println "---> mad props!"
-	ONIETargetsProperties.Platform.each() {
-	    String platName = it.Name.trim()
+	ONIETargetsProperties.each() {
+	    println "---> print each"
+//	    printAllMethods( it )
+//	    def ONIEPlatform = it
+	    String platName = it.Platform.trim()
 
 	    // Defaults that will be true for most platforms.
-	    String makeCommand = "MACHINEROOT=../machine/${it.Manufacturer.trim()}  MACHINE=${it.Name.trim()}"
+	    String makeCommand = "MACHINEROOT=../machine/${it.Vendor.trim()}  MACHINE=${it.Platform.trim()}"
 	    String buildEnv = "due-onie-build-debian-9"
+
 	    // Virtual systems don't have a manufacturer dir
 	    switch ( platName ) {
 		case "kvm_x86_64":
@@ -174,8 +181,8 @@ class BuildTargetList {
 	    }//switch
 
 	    def platFields = [
-		Manufacturer : it.Manufacturer.trim(),
-		Name  : platName,
+		Vendor : it.Vendor.trim(),
+		Platform  : platName,
 		BuildEnv : buildEnv,
 		Release : it.Release.trim(),
 		Architecture : it.Architecture.trim(),
@@ -184,6 +191,8 @@ class BuildTargetList {
 		MakeTarget : makeCommand 
 	    ]
 
+	    println "----> made it to for each ${platName} ${buildEnv}"
+	    
             ONIEPlatformArray.add( new ONIEPlatform( platFields ) )
 	    println "Test debug Platform Name: ${platName} DONE"
 	    println "--->>"
@@ -223,7 +232,7 @@ try {
     targetList.ONIEPlatformArray.each {
 	// Every entry has a manufacturer string, so only make the
 	// folder once per unique entry
-	String newFolder = it.Manufacturer.trim()	
+	String newFolder = it.Vendor.trim()	
 	if ( lastFolder != newFolder ) {
 	    lastFolder = newFolder
             println "---> Creating manufacturer folder ${newFolder}"
@@ -261,12 +270,12 @@ try {
 			 DueMountSystemPackageCacheDir =  " --mount-dir /var/cache/onie/download:/var/cache/onie/download "
 			 BuildLocalCache = ' export ENV_USE_ONIE_SYSTEM_CACHE=\"TRUE\" '
 		}
-        println "Naming job ${buildTargetInfo.Name}"
-        // use leading / to put this job in the top level Manufacturer folder
-        def aJob = freeStyleJob( "/${buildTargetInfo.Manufacturer}/${buildTargetInfo.Name}" ) {
+        println "Naming job ${buildTargetInfo.Platform}"
+        // use leading / to put this job in the top level Vendor folder
+        def aJob = freeStyleJob( "/${buildTargetInfo.Vendor}/${buildTargetInfo.Platform}" ) {
             // any system labeled 'onie' can build.
             label 'onie'
-            description "Build ONIE for ${buildTargetInfo.Manufacturer} ${buildTargetInfo.Name} Arch: ${buildTargetInfo.Architecture} Release: ${buildTargetInfo. Release} Notes: ${buildTargetInfo.Notes}"
+            description "Build ONIE for Vendor: ${buildTargetInfo.Vendor} Platform: ${buildTargetInfo.Platform} Arch: ${buildTargetInfo.Architecture} Release: ${buildTargetInfo. Release} Notes: ${buildTargetInfo.Notes}"
             parameters {
 		stringParam('BUILD_TARGETS', 'all demo', 'Default = all demo . Options: clean, distclean, recovery-iso, etc' )
 		
@@ -304,12 +313,12 @@ try {
 	    publishers {
 		extendedEmail {
 		    recipientList('adoyle@cumulusnetworks.com')
-	    defaultSubject("ONIE ${buildTargetInfo.Name}")
+	    defaultSubject("ONIE ${buildTargetInfo.Platform}")
 		    defaultContent('something broke?')
 		    contentType('text/html')
 		    triggers {
 			stillUnstable {
-			    subject("ONIE busted ${buildTargetInfo.Name} Triggered: \$BUILD_CAUSE ")
+			    subject("ONIE busted ${buildTargetInfo.Platform} Triggered: \$BUILD_CAUSE ")
 			    content('$BUILD_URL')
 			    sendTo {
 				developers()
@@ -336,7 +345,7 @@ try {
                     // TODO: The  /work/onie/jenkins-node-builds/workspace/ should be a variable
 		    // NOTE: BUILD_TARGETS is set as a parameter above. If you don't \ the $, you'll get errors
 		    //       about Jenkins not recognizing it, and waste an hour plus figuring it out.
-                    shell (" due --run-image ${buildTargetInfo.BuildEnv} ${DueMountSystemPackageCacheDir}  --command export PATH=\"/sbin:/usr/sbin:\$PATH\" ${BuildLocalCache} \\; make -j ${buildTargetInfo.Jobs}   -C /work/onie/jenkins-node-builds/workspace/${buildTargetInfo.Manufacturer}/${buildTargetInfo.Name}/onie/build-config ${buildTargetInfo.MakeTarget} \$BUILD_TARGETS " )
+                    shell (" due --run-image ${buildTargetInfo.BuildEnv} ${DueMountSystemPackageCacheDir}  --command export PATH=\"/sbin:/usr/sbin:\$PATH\" ${BuildLocalCache} \\; make -j${buildTargetInfo.Jobs}   -C /work/onie/jenkins-node-builds/workspace/${buildTargetInfo.Vendor}/${buildTargetInfo.Platform}/onie/build-config ${buildTargetInfo.MakeTarget} \$BUILD_TARGETS " )
                 }catch( Exception e ) {
                     println "---> ERROR BUILDING ONIE"
                     println "=====> ${e}"
