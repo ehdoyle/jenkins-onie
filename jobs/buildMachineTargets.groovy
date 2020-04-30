@@ -59,8 +59,7 @@ class BuildTargetList {
     // top of file definition is out of scope for this...
     def onieMasterURL="https://github.com/opencomputeproject/onie.git"
     def onieAlexURL="https://github.com/ehdoyle/onie.git"
-    def onieURL=onieAlexURL
-    
+    def onieURL=onieMasterURL
 
     // store array of platforms parsed out of json file
     
