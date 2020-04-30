@@ -15,6 +15,7 @@ println "actual parsing code goes here."
 
 def onieMasterURL="https://github.com/opencomputeproject/onie.git"
 def onieAlexURL="https://github.com/ehdoyle/onie.git"
+// set to override source
 def onieURL= onieAlexURL
 def onieBranch="master"
 def stageName="checkout ONIE"
@@ -58,24 +59,11 @@ class BuildTargetList {
     // top of file definition is out of scope for this...
     def onieMasterURL="https://github.com/opencomputeproject/onie.git"
     def onieAlexURL="https://github.com/ehdoyle/onie.git"
-    def onieURL=onieMasterURL
+    def onieURL=onieAlexURL
     
 
-    // list of strings
-//    List<String> checkoutCmds = new ArrayList<>()
-
-//    String machineList
-
-    // Create a list of Vendors to create folders in Jenkins
-//    def VendorArray = []
-
-    // Create a list of BuildTarget objects
-//    def BuildTargetArray = []
-
-    // Create list of buildable machine targets
-//    def BuildArray = []
-
-
+    // store array of platforms parsed out of json file
+    
     def ONIEPlatformArray = []
     // debug to see what our options are with any given object
     void printAllMethods( obj ){
@@ -148,7 +136,6 @@ class BuildTargetList {
 	println "---> Gonna do file"
 	def ONIETargetsFile = new File( "${onieCheckoutDir}/build-config/scripts/onie-build-targets.json")
 	println "---> Reading file ${ONIETargetsFile}"
-//	Map ONIETargetsProperties = new JsonSlurper().parseText( ONIETargetsFile.getText("UTF-8") )		
 	def ONIETargetsProperties = new JsonSlurper().parseText( ONIETargetsFile.getText("UTF-8") )		
 
 	printAllMethods( ONIETargetsProperties )
@@ -156,8 +143,6 @@ class BuildTargetList {
 	println "---> mad props!"
 	ONIETargetsProperties.each() {
 	    println "---> print each"
-//	    printAllMethods( it )
-//	    def ONIEPlatform = it
 	    String platName = it.Platform.trim()
 
 	    // Defaults that will be true for most platforms.
@@ -180,6 +165,7 @@ class BuildTargetList {
 		    break
 	    }//switch
 
+	    // set up parameters to initialize object
 	    def platFields = [
 		Vendor : it.Vendor.trim(),
 		Platform  : platName,
@@ -252,10 +238,6 @@ try {
 
 try {
 
-//    println "--> dumping JSON parse."
-//    targetList.ONIEPlatformArray.each {
-//	it.printContents()
-//    }
     targetList.ONIEPlatformArray.each {
         //          println "Will make ${it.machine} with ${it.buildEnv}"
         // save this so it doesn't get replaced
@@ -265,11 +247,11 @@ try {
 		def DueMountSystemPackageCacheDir = "" 
 		def BuildLocalCache = ""
 
-		if ( 1 == 1 ) {
-		// mount the host local cache of downloadable packages.			
-			 DueMountSystemPackageCacheDir =  " --mount-dir /var/cache/onie/download:/var/cache/onie/download "
-			 BuildLocalCache = ' export ENV_USE_ONIE_SYSTEM_CACHE=\"TRUE\" '
-		}
+	// Default to  mount the host local cache of downloadable packages.'
+	// comment these lines out if you don't want that
+	DueMountSystemPackageCacheDir =  " --mount-dir /var/cache/onie/download:/var/cache/onie/download "
+	BuildLocalCache = '  ONIE_USE_SYSTEM_DOWNLOAD_CACHE=\"TRUE\" '
+	
         println "Naming job ${buildTargetInfo.Platform}"
         // use leading / to put this job in the top level Vendor folder
         def aJob = freeStyleJob( "/${buildTargetInfo.Vendor}/${buildTargetInfo.Platform}" ) {
@@ -285,7 +267,12 @@ try {
 	    triggers {
 		scm('@daily')
 	    }
-	    
+
+	    // Set checkbox to delete workspace before starting new build
+	    // 'Delete workspace before build starts'
+	    wrappers {
+		preBuildCleanup()
+	    }	    
 	    // use JobDSL to create a Git panel in the job
 	    scm {
 		git {
@@ -305,9 +292,8 @@ try {
 			    timeout( 120)
 			}
 		    }
-		    
 		}
-	    }
+	    }//scm
 
 	    // send email when anything exciting happens
 	    publishers {
@@ -329,11 +315,6 @@ try {
 	    }//publishers
 	    
             steps {
-
-                //      def buildCommand = "
-                //                                                          BuildTargetArray.add( new BuildTarget( manufacturer: dirName.trim(), machine: it.trim(), buildEnv: "debian9", makeTarget: "make -j4 MACHINEROOT=../machine/${dirName} MACHINE=${dirName} all demo " ) )
-
-
                 // Invoke a due build that will mount the workspace and reference the oniebuild user's home directory for config
                 // Jenkins Example: accessing binding variables
                 def seed_job_workspace = "${binding.variables.WORKSPACE}"
@@ -345,18 +326,13 @@ try {
                     // TODO: The  /work/onie/jenkins-node-builds/workspace/ should be a variable
 		    // NOTE: BUILD_TARGETS is set as a parameter above. If you don't \ the $, you'll get errors
 		    //       about Jenkins not recognizing it, and waste an hour plus figuring it out.
-                    shell (" due --run-image ${buildTargetInfo.BuildEnv} ${DueMountSystemPackageCacheDir}  --command export PATH=\"/sbin:/usr/sbin:\$PATH\" ${BuildLocalCache} \\; make -j${buildTargetInfo.Jobs}   -C /work/onie/jenkins-node-builds/workspace/${buildTargetInfo.Vendor}/${buildTargetInfo.Platform}/onie/build-config ${buildTargetInfo.MakeTarget} \$BUILD_TARGETS " )
+                    shell (" due --run-image ${buildTargetInfo.BuildEnv} ${DueMountSystemPackageCacheDir}  --command export PATH=\"/sbin:/usr/sbin:\$PATH\"  \\; make -j${buildTargetInfo.Jobs}  ${BuildLocalCache} -C /work/onie/jenkins-node-builds/workspace/${buildTargetInfo.Vendor}/${buildTargetInfo.Platform}/onie/build-config ${buildTargetInfo.MakeTarget} \$BUILD_TARGETS " )
                 }catch( Exception e ) {
                     println "---> ERROR BUILDING ONIE"
                     println "=====> ${e}"
                     println "---> Exiting..."
                     exit 1
                 }
-                //                  shell "make -C onie/build-config -j4 ${buildTargetInfo.makeTarget}"
-                //  println "Machine result ${targetList.myCmdResult}"
-                //          println "Machine list ${targetList.machineList}"
-                //println "Machine list ${targetList.BuildArray}"
-                //          println( "done!" )
 
             }//steps
         }//test job
