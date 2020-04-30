@@ -15,8 +15,8 @@ println "actual parsing code goes here."
 
 def onieMasterURL="https://github.com/opencomputeproject/onie.git"
 def onieAlexURL="https://github.com/ehdoyle/onie.git"
-// set to override source
-def onieURL= onieAlexURL
+// set to override source - see below
+def onieURL= onieMasterURL
 def onieBranch="master"
 def stageName="checkout ONIE"
 println "---> ${curFileName} Checking out branch ${onieBranch} from ${onieURL}"
@@ -59,6 +59,7 @@ class BuildTargetList {
     // top of file definition is out of scope for this...
     def onieMasterURL="https://github.com/opencomputeproject/onie.git"
     def onieAlexURL="https://github.com/ehdoyle/onie.git"
+	// set to override source - see above
     def onieURL=onieMasterURL
 
     // store array of platforms parsed out of json file
