@@ -21,7 +21,7 @@ def onieLocalURL="oniebuild@192.168.1.139:/home/oniebuild/onie"
 
 // set to override source - see below
 //def onieURL= onieMasterURL
-def onieURL= onieLocalURL
+def onieURL= onieAlexURL
 def onieBranch="master"
 def stageName="checkout ONIE"
 println "---> ${curFileName} Checking out branch ${onieBranch} from ${onieURL}"
@@ -68,7 +68,7 @@ class BuildTargetList {
 	
 	// set to override source - see above
     //def onieURL=onieMasterURL
-	def onieURL=onieLocalURL
+	def onieURL=onieAlexURL
 
     // store array of platforms parsed out of json file
     
