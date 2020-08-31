@@ -20,8 +20,8 @@ def onieAlexURL="https://github.com/ehdoyle/onie.git"
 def onieLocalURL="oniebuild@192.168.1.139:/home/oniebuild/onie"
 
 // set to override source - see below
-//def onieURL= onieMasterURL
-def onieURL= onieAlexURL
+def onieURL= onieMasterURL
+//def onieURL= onieAlexURL
 def onieBranch="master"
 def stageName="checkout ONIE"
 println "---> ${curFileName} Checking out branch ${onieBranch} from ${onieURL}"
