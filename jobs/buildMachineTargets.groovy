@@ -156,7 +156,8 @@ class BuildTargetList {
             println "---> ONIE directory structure looks bad. Deleting and trying again."
             runCommand "rm -rf ${onieCheckoutDir}"
             println "---> Second try checking out ONIE"
-            runCommand "git clone ${onieURL}  ${onieCheckoutDir}"
+            //runCommand "git clone ${onieURL}  ${onieCheckoutDir}"
+			runCommand "sshpass -p oniebuild git clone ${onieURL} ${onieCheckoutDir}"			
             if( cmdErr.size() > 0 ) {
                 println "ERROR! Failed to clone ${onieURL}"
                 exit "Failed to clone ${onieURL}"
