@@ -20,7 +20,7 @@ def onieAlexURL="https://github.com/ehdoyle/onie.git"
 def onieLocalURL="oniebuild@192.168.1.139:/home/oniebuild/onie"
 
 //def onieJenkinsURL="http://onie.mvlab.cumulusnetworks.com/jenkins/jenkins-onie"
-def onieJenkinsURL="oniebuild@onie.mvlab.cumulusnetworks.com:/jenkins/jenkins-onie"
+def onieJenkinsURL="oniebuild@onie.mvlab.cumulusnetworks.com:/var/www/html/jenkins/jenkins-onie"
 // set to override source - see below
 //def onieURL= onieMasterURL
 
@@ -72,7 +72,7 @@ class BuildTargetList {
     def onieMasterURL="https://github.com/opencomputeproject/onie.git"
     def onieAlexURL="https://github.com/ehdoyle/onie.git"
 	def onieLocalURL="oniebuild@onie.mvlab.cumulusnetworks.com:/home/oniebuild/onie"
-	def onieJenkinsURL="oniebuild@onie.mvlab.cumulusnetworks.com:/jenkins/jenkins-onie"	
+	def onieJenkinsURL="oniebuild@onie.mvlab.cumulusnetworks.com:/var/www/html/jenkins/jenkins-onie"	
     //alternatively file:///path to onie
 	
 	// set to override source - see above
