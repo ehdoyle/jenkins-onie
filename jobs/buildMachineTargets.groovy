@@ -81,7 +81,7 @@ class BuildTargetList {
 	//def onieURL="oniebuild@onie.mvlab.cumulusnetworks.com:/home/adoyle/PULL-REQ/onie"
 	// use local onie for build
 	// NOTE - 'global' values don't apply here. Have to set it from ^^^
-	def onieURL = onieJenkinsURL
+	def onieURL = "http://onie.mvlab.cumulusnetworks.com:/jenkins/build-onie"
 
     // store array of platforms parsed out of json file
     
