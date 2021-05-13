@@ -64,11 +64,13 @@ class BuildTargetList {
     // top of file definition is out of scope for this...
     def onieMasterURL="https://github.com/opencomputeproject/onie.git"
     def onieAlexURL="https://github.com/ehdoyle/onie.git"
-	def onieLocalURL="oniebuild@192.168.1.139:/home/oniebuild/onie"
+	def onieLocalURL="oniebuild@onie.mvlab.cumulusnetworks.com:/home/oniebuild/onie"
+    //alternatively file:///path to onie
 	
 	// set to override source - see above
     //def onieURL=onieMasterURL
-	def onieURL=onieAlexURL
+	//def onieURL=onieAlexURL
+	def onieURL="oniebuild@onie.mvlab.cumulusnetworks.com:/home/adoyle/PULL-REQ/onie"
 
     // store array of platforms parsed out of json file
     
