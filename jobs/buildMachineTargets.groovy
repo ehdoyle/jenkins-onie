@@ -26,8 +26,11 @@ def onieJenkinsURL="oniebuild@onie.mvlab.cumulusnetworks.com:/jenkins/jenkins-on
 
 def onieBranch="master"
 def stageName="checkout ONIE"
-def onieURL="oniebuild@onie.mvlab.cumulusnetworks.com:/jenkins/jenkins-onie"
+def onieURL = onieJenkinsURL
+def seriousONIEURL="oniebuild@onie.mvlab.cumulusnetworks.com:/jenkins/jenkins-onie"
+
 println "---> ${curFileName} Starting local."
+println "---> onieURL was set to ${onieURL}"
 println "---> ${curFileName} Checking out local branch ${onieBranch} from ${onieURL}"
 
 
@@ -76,7 +79,7 @@ class BuildTargetList {
 	//def onieURL=onieAlexURL
 	//def onieURL="oniebuild@onie.mvlab.cumulusnetworks.com:/home/adoyle/PULL-REQ/onie"
 	// use local onie for build
-	def onieURL="http://onie.mvlab.cumulusnetworks.com/jenkins/build-onie"
+	def onieURL= seriousONIEURL 
 
     // store array of platforms parsed out of json file
     
@@ -129,6 +132,7 @@ class BuildTargetList {
         // add commands to list
         def onieCheckoutDir = "/var/jenkins_home/workspace/SeedJobs/Seed_ONIE/oniecheckout"
 
+		// Note: this debug ends up in the container's /var/log/jenkins.og
         println "---> Commented out delete of ONIE to save debug time."
         runCommand "rm -rf ${onieCheckoutDir}"
 
@@ -144,7 +148,7 @@ class BuildTargetList {
             runCommand "git clone ${onieURL}  ${onieCheckoutDir}"
             if( cmdErr.size() > 0 ) {
                 println "ERROR! Failed to clone ${onieURL}"
-                exit 1
+                exit "Failed to clone ${onieURL}"
             }else {
 		println "----> double error fallthrough"
             }
@@ -221,7 +225,7 @@ try {
     println "=====> ${e}"
     println "---> Exiting..."
     // up and die
-    exit 1
+    exit "Get machine list failed."
 }
 
 
