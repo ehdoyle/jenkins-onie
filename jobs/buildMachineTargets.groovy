@@ -81,8 +81,10 @@ class BuildTargetList {
 	//def onieURL="oniebuild@onie.mvlab.cumulusnetworks.com:/home/adoyle/PULL-REQ/onie"
 	// use local onie for build
 	// NOTE - 'global' values don't apply here. Have to set it from ^^^
-	def onieURL = "http://onie.mvlab.cumulusnetworks.com:/jenkins/build-onie"
+	//def onieURL = "http://onie.mvlab.cumulusnetworks.com:/jenkins/build-onie"
 
+	def onieURL="oniebuild@onie.mvlab.cumulusnetworks.com:/var/www/html/jenkins/jenkins-onie"
+	
     // store array of platforms parsed out of json file
     
     def ONIEPlatformArray = []
@@ -140,7 +142,14 @@ class BuildTargetList {
         runCommand "rm -rf ${onieCheckoutDir}"
 
         println "---> Cloning ${onieURL} to ${onieCheckoutDir}"
-        runCommand "git clone ${onieURL} ${onieCheckoutDir}"
+
+		diff credentials/oniebuild_id_rsa
+
+		//sshpass -p oniebuild git clone oniebuild@onie.mvlab.cumulusnetworks.com:/var/www/html/jenkins/jenkins-onie
+		runCommand "apt-get install sshpass"
+		
+        //runCommand "git clone ${onieURL} ${onieCheckoutDir}"
+		runCommand "sshpass -p oniebuild git clone ${onieURL} ${onieCheckoutDir}"
         println "Got out ${cmdOut}"
         println "Got err ${cmdErr}"
         runCommand "find  ${onieCheckoutDir}/machine -maxdepth 1"
