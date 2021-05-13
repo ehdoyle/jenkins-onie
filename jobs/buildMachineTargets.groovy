@@ -72,6 +72,7 @@ class BuildTargetList {
     def onieMasterURL="https://github.com/opencomputeproject/onie.git"
     def onieAlexURL="https://github.com/ehdoyle/onie.git"
 	def onieLocalURL="oniebuild@onie.mvlab.cumulusnetworks.com:/home/oniebuild/onie"
+	def onieJenkinsURL="oniebuild@onie.mvlab.cumulusnetworks.com:/jenkins/jenkins-onie"	
     //alternatively file:///path to onie
 	
 	// set to override source - see above
@@ -79,7 +80,8 @@ class BuildTargetList {
 	//def onieURL=onieAlexURL
 	//def onieURL="oniebuild@onie.mvlab.cumulusnetworks.com:/home/adoyle/PULL-REQ/onie"
 	// use local onie for build
-	def onieURL= seriousONIEURL 
+	// NOTE - 'global' values don't apply here. Have to set it from ^^^
+	def onieURL = onieJenkinsURL
 
     // store array of platforms parsed out of json file
     
