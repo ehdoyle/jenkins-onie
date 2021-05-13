@@ -83,7 +83,7 @@ class BuildTargetList {
 	// NOTE - 'global' values don't apply here. Have to set it from ^^^
 	//def onieURL = "http://onie.mvlab.cumulusnetworks.com:/jenkins/build-onie"
 
-	def onieURL="oniebuild@onie.mvlab.cumulusnetworks.com:/var/www/html/jenkins/jenkins-onie"
+	def onieURL="oniebuild@onie.mvlab.cumulusnetworks.com:/var/www/html/jenkins/build-onie"
 	
     // store array of platforms parsed out of json file
     
