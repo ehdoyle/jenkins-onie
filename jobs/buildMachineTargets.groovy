@@ -143,8 +143,6 @@ class BuildTargetList {
 
         println "---> Cloning ${onieURL} to ${onieCheckoutDir}"
 
-		diff credentials/oniebuild_id_rsa
-
 		//sshpass -p oniebuild git clone oniebuild@onie.mvlab.cumulusnetworks.com:/var/www/html/jenkins/jenkins-onie
 		println "---> install sshpass"
 		runCommand "apt-get install sshpass"
