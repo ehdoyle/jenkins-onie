@@ -19,12 +19,16 @@ def onieAlexURL="https://github.com/ehdoyle/onie.git"
 // This should save bandwidth on pulling 200MB per target when rebuilding the world.
 def onieLocalURL="oniebuild@192.168.1.139:/home/oniebuild/onie"
 
+//def onieJenkinsURL="http://onie.mvlab.cumulusnetworks.com/jenkins/jenkins-onie"
+def onieJenkinsURL="oniebuild@onie.mvlab.cumulusnetworks.com:/jenkins/jenkins-onie"
 // set to override source - see below
-def onieURL= onieMasterURL
-//def onieURL= onieAlexURL
+//def onieURL= onieMasterURL
+
 def onieBranch="master"
 def stageName="checkout ONIE"
-println "---> ${curFileName} Checking out branch ${onieBranch} from ${onieURL}"
+def onieURL="oniebuild@onie.mvlab.cumulusnetworks.com:/jenkins/jenkins-onie"
+println "---> ${curFileName} Starting local."
+println "---> ${curFileName} Checking out local branch ${onieBranch} from ${onieURL}"
 
 
 class ONIEPlatform {
@@ -70,7 +74,9 @@ class BuildTargetList {
 	// set to override source - see above
     //def onieURL=onieMasterURL
 	//def onieURL=onieAlexURL
-	def onieURL="oniebuild@onie.mvlab.cumulusnetworks.com:/home/adoyle/PULL-REQ/onie"
+	//def onieURL="oniebuild@onie.mvlab.cumulusnetworks.com:/home/adoyle/PULL-REQ/onie"
+	// use local onie for build
+	def onieURL="http://onie.mvlab.cumulusnetworks.com/jenkins/build-onie"
 
     // store array of platforms parsed out of json file
     
