@@ -27,10 +27,10 @@ def onieJenkinsURL="oniebuild@onie.mvlab.cumulusnetworks.com:/jenkins/jenkins-on
 def onieBranch="master"
 def stageName="checkout ONIE"
 def onieURL = onieJenkinsURL
-def seriousONIEURL="oniebuild@onie.mvlab.cumulusnetworks.com:/jenkins/jenkins-onie"
+def seriousONIEURL = onieJenkinsURL
 
 println "---> ${curFileName} Starting local."
-println "---> onieURL was set to ${onieURL}"
+println "---> Check container's /var/log/jenkins.log for more debug output."
 println "---> ${curFileName} Checking out local branch ${onieBranch} from ${onieURL}"
 
 
@@ -133,10 +133,11 @@ class BuildTargetList {
         def onieCheckoutDir = "/var/jenkins_home/workspace/SeedJobs/Seed_ONIE/oniecheckout"
 
 		// Note: this debug ends up in the container's /var/log/jenkins.og
-        println "---> Commented out delete of ONIE to save debug time."
+		//println "---> Commented out delete of ONIE to save debug time."
+		println "---> Cleaning out old ${onieCheckoutDir}"
         runCommand "rm -rf ${onieCheckoutDir}"
 
-        println "---> Cloning to ${onieCheckoutDir}"
+        println "---> Cloning ${onieURL} to ${onieCheckoutDir}"
         runCommand "git clone ${onieURL} ${onieCheckoutDir}"
         println "Got out ${cmdOut}"
         println "Got err ${cmdErr}"
