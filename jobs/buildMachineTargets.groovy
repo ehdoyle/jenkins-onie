@@ -21,13 +21,14 @@ def onieLocalURL="oniebuild@192.168.1.139:/home/oniebuild/onie"
 
 //def onieJenkinsURL="http://onie.mvlab.cumulusnetworks.com/jenkins/jenkins-onie"
 def onieJenkinsURL="oniebuild@onie.mvlab.cumulusnetworks.com:/var/www/html/jenkins/jenkins-onie"
+def onieBuildURL="oniebuild@onie.mvlab.cumulusnetworks.com:/var/www/html/jenkins/build-onie"
 // set to override source - see below
 //def onieURL= onieMasterURL
 
 def onieBranch="master"
 def stageName="checkout ONIE"
-def onieURL = onieJenkinsURL
-def seriousONIEURL = onieJenkinsURL
+def onieURL = onieBuildURL
+def seriousONIEURL = onieBuildURL
 
 println "---> ${curFileName} Starting local."
 println "---> Check container's /var/log/jenkins.log for more debug output."
